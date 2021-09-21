@@ -1,0 +1,8 @@
+.reveal .small {
+    height: 200px;
+}
+
+.reveal img {
+    max-height: calc(66vh);
+    max-width: calc(66vw);
+}
