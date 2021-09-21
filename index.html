@@ -4,11 +4,11 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>reveal.js</title>
+		<title>To JPA or not</title>
 
 		<link rel="stylesheet" href="dist/reset.css">
 		<link rel="stylesheet" href="dist/reveal.css">
-		<link rel="stylesheet" href="dist/theme/black.css">
+		<link rel="stylesheet" href="dist/theme/night.css">
 
 		<!-- Theme used for syntax highlighted code -->
 		<link rel="stylesheet" href="plugin/highlight/monokai.css">
@@ -16,8 +16,31 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+				<section>
+					<h1>Title page here</h1>
+				</section>
+				<section data-markdown>
+					<textarea data-template>
+						## Slide $a
+						Text
+						---
+						## Slide $b
+						Text
+
+						Text
+
+						Text
+						---
+						## Slide $c
+
+						```js [1-2|3|4]
+						let a = 1;
+						let b = 2;
+						let c = x => 1 + 2 + x;
+						c(3);
+						```
+					</textarea>
+				</section>
 			</div>
 		</div>
 
@@ -31,6 +54,7 @@
 			// - https://revealjs.com/config/
 			Reveal.initialize({
 				hash: true,
+				slideNumber: "c/t",
 
 				// Learn about plugins: https://revealjs.com/plugins/
 				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
