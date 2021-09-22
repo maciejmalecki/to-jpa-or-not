@@ -1,8 +1,40 @@
-.reveal .small {
-    height: 200px;
+/*
+ * Image sizes.
+ */
+.reveal img {
+    max-height: calc(50vh);
+    max-width: calc(50vw);
 }
 
-.reveal img {
-    max-height: calc(66vh);
-    max-width: calc(66vw);
+/*
+ * Image source "on hover" handling.
+ */
+ .source p, .source ol {
+    display: none;
+    position: absolute;
+    background-color: black;
+    bottom: 0;
+    width: 100%;
+    font-size: small;
+    border-radius: 0.5em;
+    border-style: solid;
+    border-width: 1px;
+    border-color: grey;
+    padding: 0.5em;
+}
+.source ol {
+    padding-left: 20px;
+}
+.source {
+    font-size: small;
+    text-align: left;
+    padding: 0.5em;
+    display: table;
+}
+.source::after {
+    cursor: pointer;
+    content: "\1f6c8  IMG source";
+}
+.source:hover p, .source:hover ol {
+    display: block;
 }
