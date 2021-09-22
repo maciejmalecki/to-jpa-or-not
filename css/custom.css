@@ -5,6 +5,22 @@
     max-height: calc(50vh);
     max-width: calc(50vw);
 }
+.reveal ul {
+    list-style-type: none;
+}
+
+/*
+ * Colors.
+ */
+.white {
+    color: #ffffff;
+}
+.cyan {
+    color: #55FFFF;
+}
+.pink {
+    color: #ff55ff;
+}
 
 /*
  * Image source "on hover" handling.
@@ -16,10 +32,7 @@
     bottom: 0;
     width: 100%;
     font-size: small;
-    border-radius: 0.5em;
-    border-style: solid;
-    border-width: 1px;
-    border-color: grey;
+    box-shadow: 5px 5px 8px navy;
     padding: 0.5em;
 }
 .source ol {
