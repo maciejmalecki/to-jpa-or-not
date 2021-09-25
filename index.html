@@ -32,8 +32,6 @@
 
 						![Layered](img/layered.png)<!-- .element: class="fragment"-->
 						---
-						## problems
-
 						```java [3|5-12|14-27|29-40|42-55|57-60|62-66|68-83|84-88|91-100]
 						@Named
 						@Transactional
@@ -153,7 +151,10 @@
 
 						![Hexagonal deps](img/hexagonal-deps.png)
 						---
-						persistence port and adapter overview
+						### data port and adapter
+						![Data port and adapter](img/data-port.png)
+
+						*inversion of control<!-- .element: class="fragment cyan" -->
 						---
 						example
 						---
@@ -228,6 +229,7 @@
 			Reveal.initialize({
 				hash: true,
 				slideNumber: "c/t",
+				width: 1050,
 
 				// Learn about plugins: https://revealjs.com/plugins/
 				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
