@@ -17,11 +17,10 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>
-					<h1>to JPA or not</h1>
-				</section>
 				<section data-markdown>
 					<textarea data-template>
+						<!-- .slide: data-background-image="img/first-page.png"-->
+						---
 						### software systems be like
 
 						![Koszmary architektury](img/koszmary-architektury.jpg)
@@ -32,7 +31,7 @@
 
 						![Layered](img/layered.png)<!-- .element: class="fragment"-->
 						---
-						```java [3|5-12|14-27|29-40|42-55|57-60|62-66|68-83|84-88|91-100]
+						```java [3|5-12|14-27|29-40|42-55|57-60|62-66|68-83|84-88|91-100|103-116|118-123|125-139]
 						@Named
 						@Transactional
 						public class Bookingmanagement {
@@ -133,6 +132,47 @@
 							getBookingDao().delete(booking);
 							return true;
 						  }
+
+						  @Override
+						  public BookingEto saveBooking(BookingCto booking) {
+							Objects.requireNonNull(booking, "booking");
+							BookingEntity bookingEntity = getBeanMapper().map(booking.getBooking(), BookingEntity.class);
+							bookingEntity.setCanceled(false);
+							List<InvitedGuestEntity> invited = getBeanMapper().mapList(booking.getInvitedGuests(), InvitedGuestEntity.class);
+
+							for (InvitedGuestEntity invite : invited) {
+							try {
+								invite.setGuestToken(buildToken(invite.getEmail(), "GB_"));
+							} catch (NoSuchAlgorithmException e) {
+								LOG.debug("MD5 Algorithm not available at the enviroment");
+							}
+							invite.setAccepted(false);
+							}
+
+							bookingEntity.setInvitedGuests(invited);
+							try {
+								bookingEntity.setBookingToken(buildToken(bookingEntity.getEmail(), "CB_"));
+							} catch (NoSuchAlgorithmException e) {
+								LOG.debug("MD5 Algorithm not available at the enviroment");
+							}
+
+							bookingEntity.setCreationDate(Instant.now());
+							bookingEntity.setExpirationDate(bookingEntity.getBookingDate().minus(Duration.ofHours(1)));
+
+							bookingEntity.setInvitedGuests(getBeanMapper().mapList(invited, InvitedGuestEntity.class));
+
+							BookingEntity resultEntity = getBookingDao().save(bookingEntity);
+							LOG.debug("Booking with id '{}' has been created.", resultEntity.getId());
+							for (InvitedGuestEntity invitedGuest : resultEntity.getInvitedGuests()) {
+								invitedGuest.setBookingId(resultEntity.getId());
+								InvitedGuestEntity resultInvitedGuest = getInvitedGuestDao().save(invitedGuest);
+							}
+
+							sendConfirmationEmails(resultEntity);
+
+							return getBeanMapper().map(resultEntity, BookingEto.class);
+						}
+
 						```
 						---
 						### why layers are challenging?
