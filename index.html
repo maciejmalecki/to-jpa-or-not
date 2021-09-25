@@ -32,11 +32,126 @@
 
 						![Layered](img/layered.png)<!-- .element: class="fragment"-->
 						---
-						todo: explain problems with layers
+						## problems
+
+						```java [3|5-12|14-27|29-40|42-55|57-60|62-66|68-83|84-88|91-100]
+						@Named
+						@Transactional
+						public class Bookingmanagement {
+
+						  @Value("${client.port}")
+						  private int clientPort;
+
+						  @Value("${server.servlet.context-path}")
+						  private String serverContextPath;
+
+						  @Value("${mythaistar.hourslimitcancellation}")
+						  private int hoursLimit;
+
+						  @Inject
+						  private BookingRepository bookingDao;
+
+						  @Inject
+						  private InvitedGuestRepository invitedGuestDao;
+
+						  @Inject
+						  private TableRepository tableDao;
+
+						  @Inject
+						  private Ordermanagement orderManagement;
+
+						  @Inject
+						  private Mail mailService;
+
+						  @Override
+						  public BookingCto findBooking(Long id) {
+							LOG.debug("Get Booking with id {} from database.", id);
+							BookingEntity entity = getBookingDao().find(id);
+							BookingCto cto = new BookingCto();
+							cto.setBooking(getBeanMapper().map(entity, BookingEto.class));
+							cto.setTable(getBeanMapper().map(entity.getTable(), TableEto.class));
+							cto.setOrder(getBeanMapper().map(entity.getOrder(), OrderEto.class));
+							cto.setInvitedGuests(getBeanMapper().mapList(entity.getInvitedGuests(), InvitedGuestEto.class));
+							cto.setOrders(getBeanMapper().mapList(entity.getOrders(), OrderEto.class));
+							return cto;
+						  }
+
+						  @Override
+						  public BookingCto findBookingByToken(String token) {
+							BookingEntity entity = getBookingDao().findBookingByToken(token);
+							BookingCto cto = null;
+							if (entity != null) {
+							  cto = new BookingCto();
+							  cto.setBooking(getBeanMapper().map(entity, BookingEto.class));
+							  cto.setTable(getBeanMapper().map(entity.getTable(), TableEto.class));
+							  cto.setOrder(getBeanMapper().map(entity.getOrder(), OrderEto.class));
+							  cto.setInvitedGuests(getBeanMapper().mapList(entity.getInvitedGuests(), InvitedGuestEto.class));
+							  cto.setOrders(getBeanMapper().mapList(entity.getOrders(), OrderEto.class));
+							}
+							return cto;
+						  }
+
+						  @Override
+						  public InvitedGuestEto findInvitedGuestByToken(String token) {
+							return getBeanMapper().map(getInvitedGuestDao().findInvitedGuestByToken(token), InvitedGuestEto.class);
+						  }
+
+						  @Override
+						  @RolesAllowed(ApplicationAccessControlConfig.PERMISSION_FIND_BOOKING)
+						  public Page<BookingCto> findBookingsByPost(BookingSearchCriteriaTo criteria) {
+							return findBookingCtos(criteria);
+						  }
+
+						  @Override
+						  public Page<BookingCto> findBookingCtos(BookingSearchCriteriaTo criteria) {
+
+							Page<BookingCto> pagListTo = null;
+							Page<BookingEntity> bookings = getBookingDao().findBookings(criteria);
+							List<BookingCto> ctos = new ArrayList<>();
+							for (BookingEntity entity : bookings.getContent()) {
+							  BookingCto cto = new BookingCto();
+							  cto.setBooking(getBeanMapper().map(entity, BookingEto.class));
+							  cto.setInvitedGuests(getBeanMapper().mapList(entity.getInvitedGuests(), InvitedGuestEto.class));
+							  cto.setOrder(getBeanMapper().map(entity.getOrder(), OrderEto.class));
+							  cto.setTable(getBeanMapper().map(entity.getTable(), TableEto.class));
+							  cto.setUser(getBeanMapper().map(entity.getUser(), UserEto.class));
+							  cto.setOrders(getBeanMapper().mapList(entity.getOrders(), OrderEto.class));
+							  ctos.add(cto);
+							}
+							if (ctos.size() > 0) {
+							  Pageable pagResultTo = PageRequest.of(criteria.getPageable().getPageNumber(), ctos.size());
+							  pagListTo = new PageImpl<>(ctos, pagResultTo, bookings.getTotalElements());
+							}
+							return pagListTo;
+						  }
+
+						  @Override
+						  public boolean deleteBooking(Long bookingId) {
+							List<OrderCto> bookingOrders = this.orderManagement.findOrders(bookingId);
+							for (OrderCto orderCto : bookingOrders) {
+							  boolean deleteOrderResult = this.orderManagement.deleteOrder(orderCto.getOrder().getId());
+							}
+							BookingEntity booking = getBookingDao().find(bookingId);
+							getBookingDao().delete(booking);
+							return true;
+						  }
+						```
+						---
+						### why layers are challenging?
+
+						* simple but does not scale well<!-- .element: class="fragment" -->
+						* use cases are obscured by trivial pass thru code<!-- .element: class="fragment" -->
+						* use cases are obscured by mapping<!-- .element: class="fragment" -->
+						* infrastructure layer (DB) leaks to the logic<!-- .element: class="fragment" -->
 						---
 						## hexagonal
 
 						![Hexagonal](img/hexagonal.png)
+						---
+						## hexagonal
+						### dependencies
+
+						![Hexagonal deps](img/hexagonal-deps.png)
 						---
 						persistence port and adapter overview
 						---
@@ -46,12 +161,14 @@
 						---
 						### why persistence adapter is hard?
 
+						<!-- .slide: class="hide-ticks" -->
 						* ORM code tends to leak to the domain
 						* mapping is tedious<!-- .element: class="fragment cyan" -->
 						* ORM programming style influences your domain objects<!-- .element: class="fragment pink" -->
 						---
 						### how "objects" can be stored?
 
+						<!-- .slide: class="hide-ticks" -->
 						* Object-oriented DBMS
 						* Document-oriented databases
 						* XML or JSON databases
@@ -61,6 +178,7 @@
 
 						![EJB](img/ejb.png)
 						---
+						<!-- .slide: class="hide-ticks" -->
 						* EJB: entity beans
 						* Container-Managed persistence<!-- .element: class="fragment" data-fragment-index="1" -->
 						* EJB 2: local Interfaces<!-- .element: class="fragment cyan" data-fragment-index="2" -->
@@ -74,6 +192,7 @@
 						---
 						### transparent persistence (ORM)
 
+						<!-- .slide: class="hide-ticks" -->
 						* tuple to bean mapping
 						* JPQL
 						* change detection<!-- .element: class="cyan" -->
