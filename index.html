@@ -178,9 +178,10 @@
 						### why layers are challenging?
 
 						* simple but does not scale well<!-- .element: class="fragment" -->
-						* use cases are obscured by trivial pass thru code<!-- .element: class="fragment" -->
+						* easy to hack by pushing things up<!-- .element: class="fragment cyan" -->
+						* use cases are obscured by trivial pass thru code<!-- .element: class="fragment pink" -->
 						* use cases are obscured by mapping<!-- .element: class="fragment" -->
-						* infrastructure layer (DB) leaks to the logic<!-- .element: class="fragment" -->
+						* infrastructure layer (DB) leaks to the logic<!-- .element: class="fragment cyan" -->
 						---
 						## hexagonal
 
@@ -198,7 +199,15 @@
 						---
 						example
 						---
-						mapping models
+						## mapping models
+
+						<!-- .slide: class="hide-ticks" -->
+						* no mapping
+						* full mapping
+						* two way mapping
+						* one way mapping
+
+						*Get your hands dirty with clean architecture, Tom Hombergs<!-- .element class="fragment cyan" -->
 						---
 						### why persistence adapter is hard?
 
