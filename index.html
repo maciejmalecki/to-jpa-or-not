@@ -183,6 +183,28 @@
 						* use cases are obscured by mapping<!-- .element: class="fragment" -->
 						* infrastructure layer (DB) leaks to the logic<!-- .element: class="fragment cyan" -->
 						---
+						## TBD focus on data access
+						---
+						## TBD ORM & JPA
+
+						* JPA limitations on entities
+						* technology leaks via annotations
+
+						even worse: <!-- .element: class="fragment pink r-fit-text"-->
+						---
+						## TBD even worse
+
+						* lazy loading
+						* implicit updates
+						---
+						### how JPA was born
+
+						![EJB](img/ejb.png)
+						---
+						# can we do it
+
+						better<!-- .element class="r-fit-text"-->
+						---
 						## hexagonal
 
 						![Hexagonal](img/hexagonal.png)
@@ -192,22 +214,15 @@
 
 						![Hexagonal deps](img/hexagonal-deps.png)
 						---
-						### data port and adapter
-						![Data port and adapter](img/data-port.png)
+						### data access adapter
 
-						*inversion of control<!-- .element: class="fragment cyan" -->
+						how to implement it?<!-- .element: class="pink"-->
+
+						![Data port and adapter](img/data-port.png)<!-- .element: class="fragment" data-fragment-index="1"-->
+
+						*inversion of control<!-- .element: class="fragment cyan" data-fragment-index="1"-->
 						---
-						example
-						---
-						## mapping models
-
-						<!-- .slide: class="hide-ticks" -->
-						* no mapping
-						* full mapping
-						* two way mapping
-						* one way mapping
-
-						*Get your hands dirty with clean architecture, Tom Hombergs<!-- .element class="fragment cyan" -->
+						## straight use
 						---
 						### why persistence adapter is hard?
 
@@ -223,10 +238,6 @@
 						* Document-oriented databases
 						* XML or JSON databases
 						* RDBMS (with aid of ORM)<!-- .element: class="fragment cyan" -->
-						---
-						### how JPA was born
-
-						![EJB](img/ejb.png)
 						---
 						<!-- .slide: class="hide-ticks" -->
 						* EJB: entity beans
