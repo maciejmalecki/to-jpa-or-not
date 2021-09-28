@@ -183,19 +183,32 @@
 						* use cases are obscured by mapping<!-- .element: class="fragment" -->
 						* infrastructure layer (DB) leaks to the logic<!-- .element: class="fragment cyan" -->
 						---
-						## TBD focus on data access
-						---
-						## TBD ORM & JPA
+						## but today we discuss
 
-						* JPA limitations on entities
+						data access<!-- .element: class="pink r-fit-text"-->
+						---
+						<!-- .slide: class="hide-ticks" -->
+						![ORM](img/orm-basics.png)
+
+						* limitations on entity-implementing classes
 						* technology leaks via annotations
-
-						even worse: <!-- .element: class="fragment pink r-fit-text"-->
 						---
-						## TBD even worse
+						### even more problematic
 
-						* lazy loading
-						* implicit updates
+						lazy loading
+
+						```java [1|2-3]
+						Order order = entityManager.find(Order.class, 17);
+						order.getOrderLines().forEach(line ->
+							item.getPrices().stream().summing(Price::getValue)); // N+1!
+						```
+
+						implicit updates
+
+						```java [1|2]
+						order = entityManager.find(Order.class, 17);
+						doSomeMagic(order); // one can update and you never know
+						```
 						---
 						### how JPA was born
 
@@ -203,7 +216,7 @@
 						---
 						# can we do it
 
-						better<!-- .element class="r-fit-text"-->
+						better?<!-- .element class="r-fit-text"-->
 						---
 						## hexagonal
 
