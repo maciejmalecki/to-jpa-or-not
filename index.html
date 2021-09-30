@@ -199,7 +199,7 @@
 
 						```java [1|2-3]
 						Order order = entityManager.find(Order.class, 17);
-						order.getOrderLines().forEach(line ->
+						order.getOrderLines().map(line ->
 							item.getPrices().stream().summing(Price::getValue)); // N+1!
 						```
 
@@ -214,6 +214,8 @@
 
 						![EJB](img/ejb.png)
 						---
+						### how JPA was born
+
 						<!-- .slide: class="hide-ticks" -->
 						* EJB (1998): entity beans
 						* Container-Managed persistence<!-- .element: class="fragment" data-fragment-index="1" -->
@@ -241,7 +243,45 @@
 
 						*inversion of control<!-- .element: class="fragment cyan" data-fragment-index="1"-->
 						---
+						## remap models
+
+						<!-- .slide: class="hide-ticks"-->
+						* extra mapping & more work
+						* BUT: clean & rich domain
+						* BUT: no limits
+						* BUT: do DDD
+						---
+						## how to map?
+
+						<!-- .slide: class="hide-ticks"-->
+						* use Mapstruct
+						* manually
+						---
 						## straight use
+
+						<!-- .slide: class="hide-ticks"-->
+						* simplicity
+						* no mappers
+						* BUT: tight coupling with tech<!-- .element: class="fragment pink"-->
+						* BUT: how about proxies?<!-- .element: class="fragment cyan"-->
+						---
+						## can we solve it?
+
+						![Vic](img/victorrentea.png)
+
+						<!-- .slide: class="hide-ticks"-->
+						* do not use lazy associations
+						* define aggregate boundaries<!-- .element: class="pink"-->
+						* use constructor expressions<!-- .element: class="cyan"-->
+						---
+						why to use JPA at all?<!-- .element: class="r-fit-text cyan"-->
+						---
+						### there are alternatives
+
+						<!-- .slide: class="hide-ticks"-->
+						* JOOQ
+						* R2DBC<!-- .element: class="pink fragment"-->
+						* JDBI<!-- .element: class="cyan fragment"-->
 						---
 						### why persistence adapter is hard?
 
@@ -249,40 +289,6 @@
 						* ORM code tends to leak to the domain
 						* mapping is tedious<!-- .element: class="fragment cyan" -->
 						* ORM programming style influences your domain objects<!-- .element: class="fragment pink" -->
-						---
-						### how "objects" can be stored?
-
-						<!-- .slide: class="hide-ticks" -->
-						* Object-oriented DBMS
-						* Document-oriented databases
-						* XML or JSON databases
-						* RDBMS (with aid of ORM)<!-- .element: class="fragment cyan" -->
-						---
-						### overpromising & cheating
-
-						![STS](img/sts.jpg)
-
-						<div class="source"><p>&copy; NASA (<a href="https://commons.wikimedia.org/w/index.php?curid=247205">link</a>)</p></div>
-						---
-						### transparent persistence (ORM)
-
-						<!-- .slide: class="hide-ticks" -->
-						* tuple to bean mapping
-						* JPQL
-						* change detection<!-- .element: class="cyan" -->
-						* associations<!-- .element: class="pink" -->
-						* proxies<!-- .element: class="pink" -->
-						* lazy fetching<!-- .element: class="pink" -->
-						---
-						### safety rules for JPA
-
-						<!-- .slide: class="hide-ticks" -->
-						* always fetch eager<!-- .element: class="fragment pink"-->
-						* honour aggregate boundaries<!-- .element: class="fragment cyan"-->
-						---
-						do we need to use JPA?
-
-						alternatives
 					</textarea>
 				</section>
 			</div>
