@@ -283,12 +283,90 @@
 						* R2DBC<!-- .element: class="pink fragment"-->
 						* JDBI<!-- .element: class="cyan fragment"-->
 						---
-						### why persistence adapter is hard?
+						### JDBI: simple SELECTs
 
-						<!-- .slide: class="hide-ticks" -->
-						* ORM code tends to leak to the domain
-						* mapping is tedious<!-- .element: class="fragment cyan" -->
-						* ORM programming style influences your domain objects<!-- .element: class="fragment pink" -->
+						```java [|5|6-7]
+						public class UserRepository {
+						  private final Jdbi jdbi; // <-- inject somehow
+						  public List<User> findAllUsers() {
+						    return jdbi.withHandle(handle ->
+						      handle.createQuery("SELECT id, name FROM users ORDER BY name")
+							    .mapToBean(User.class)
+								.list();
+							}
+						  }
+						```
+						---
+						### JDBI: UPDATEs, INSERTs
+
+						```java []
+						int count = handle.createUpdate(
+							"INSERT INTO users(id, name) VALUES (:id, :name)")
+								.bind("id", 5)
+								.bind("name", "foo")
+								.execute();
+						```
+
+						```java []
+						int count = handle.createUpdate(
+							"INSERT INTO users(id, name) VALUES (:id, :name)")
+								.bindBean(new User(5, "foo")
+								.execute();
+						```
+						---
+						### JDBI: SQL Objects
+
+						```java [1-11|13-18]
+						interface ManufacturerDao {
+							@SqlQuery("SELECT id, name FROM Manufacturers ORDER BY name")
+							List<ManufacturerRec> selectAll()
+
+							@SqlQuery("SELECT id, name FROM Manufacturers WHERE id=?")
+							Optional<ManufacturerRec> selectById(long id)
+
+							@SqlUpdate("INSERT INTO Manufacturers (name) VALUES (:name)")
+							@GetGeneratedKeys("id")
+							long insert(@BindBean ManufacturerRec manufacturer)
+						}
+
+						@AllArgsConstructor
+						@Getter
+						class ManufacturerRec {
+							private Long id,
+							private String name
+						}
+						```
+						---
+						### JDBI: fancy templates
+
+						``` kotlin [1-15|16-17|18-24|26]
+						@SqlQuery("""
+							SELECT
+								items.name AS name, item_class_name, item_class_version,
+								manufacturer_id, manufacturers.name AS manufacturer_name,
+								manufacturers_code AS code
+							FROM Items
+							LEFT OUTER JOIN Manufacturers ON items.manufacturer_id = manufacturers.id
+							WHERE
+							1=1
+							<if(name)>AND items.name LIKE :name<endif>
+							<if(code)>AND manufacturers_code LIKE :code<endif>
+							<if(ids)>AND manufacturer_id IN (<ids>)<endif>
+							<if(itemClassIds)>AND item_class_name IN (<itemClassIds>)<endif>
+							ORDER BY name"""
+						)
+						@DefineNamedBindings
+						@UseStringTemplateEngine
+						fun selectItemsByCriteria(
+							@BindBean criteria: ItemSearchCriteria,
+							@BindList("manufacturerIds", onEmpty = BindList.EmptyHandling.NULL_VALUE)
+							ids: List<Long>?,
+							@BindList("itemClassIds", onEmpty = BindList.EmptyHandling.NULL_VALUE)
+							itemClassIds: List<String>?
+						): List<ItemWithManufacturerRec>
+
+						data class ItemSearchCriteria(val name: String?, val code: String?)
+						```
 					</textarea>
 				</section>
 			</div>
