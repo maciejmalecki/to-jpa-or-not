@@ -605,19 +605,13 @@
 						}
 						```
 						---
-						## JDBI
-						<!-- .slide: class="hide-ticks"-->
-
-						### when to use it?
-
-						* CQRS style apps<!-- .element: class="pink"-->
-						* plenty of constructor expression<!-- .element: class="pink"-->
-
-						### when not to use it?
-
-						* CRUD applications<!-- .element: class="cyan"-->
-						---
 						## Summary
+
+						* JPA can be tamed (if you know when it fails).<!-- .element: class="fragment"-->
+						* Mapping solves most of JPA-related problems.<!-- .element: class="fragment"-->
+						* If your app mostly reads or mostly writes, use simple mapper (JDBI).<!-- .element: class="fragment"-->
+						* For CRUD-like apps use JPA and shared model.<!-- .element: class="fragment"-->
+						* BUT beware: most apps in fact are not CRUDs.<!-- .element: class="fragment pink"-->
 						---
 						## thank you & questions
 
