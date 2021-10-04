@@ -183,15 +183,12 @@
 						* use cases are obscured by mapping<!-- .element: class="fragment" -->
 						* infrastructure layer (DB) leaks to the logic<!-- .element: class="fragment cyan" -->
 						---
-						## but today we discuss
+						#### data access
 
-						data access<!-- .element: class="pink r-fit-text"-->
-						---
-						<!-- .slide: class="hide-ticks" -->
 						![ORM](img/orm-basics.png)
 
-						* limitations on entity-implementing classes
-						* technology leaks via annotations
+						* constraints on domain classes<!-- .element: class="fragment"-->
+						* technology leaks via annotations<!-- .element: class="fragment"-->
 						---
 						### even more problematic
 
@@ -209,18 +206,6 @@
 						order = entityManager.find(Order.class, 17);
 						doSomeMagic(order); // one can update and you never know
 						```
-						---
-						### how JPA was born
-
-						![EJB](img/ejb.png)
-						---
-						### how JPA was born
-
-						<!-- .slide: class="hide-ticks" -->
-						* EJB (1998): entity beans
-						* Container-Managed persistence<!-- .element: class="fragment" data-fragment-index="1" -->
-						* EJB 2 (2001): local Interfaces<!-- .element: class="fragment cyan" data-fragment-index="2" -->
-						* EJB 3 (2006): give up of entity beans<!-- .element: class="fragment pink" data-fragment-index="2" -->
 						---
 						#### architecture
 						# can we do it
@@ -244,7 +229,9 @@
 
 						*inversion of control<!-- .element: class="fragment cyan" data-fragment-index="1"-->
 						---
-						## remap models
+						### remap models
+
+						![mapping](img/full-mapping.png)
 
 						<!-- .slide: class="hide-ticks"-->
 						* extra mapping & more work
@@ -252,15 +239,20 @@
 						* BUT: no limits
 						* BUT: do DDD
 						---
-						## how to map?
+						### how to map?
 
 						<!-- .slide: class="hide-ticks"-->
-						* use Mapstruct
 						* manually
+						* use Mapstruct, but...<!-- .element: class="fragment"-->
+						* don't overdose<!-- .element: class="fragment cyan"-->
+						* know when to stop<!-- .element: class="fragment cyan"-->
 						---
-						## straight use
+						### straight use
 
 						<!-- .slide: class="hide-ticks"-->
+
+						![No mapping](img/no-mapping.png)
+
 						* simplicity
 						* no mappers
 						* BUT: tight coupling with tech<!-- .element: class="fragment pink"-->
@@ -274,19 +266,21 @@
 						* do not use lazy associations
 						* define aggregate boundaries<!-- .element: class="pink"-->
 						* use constructor expressions<!-- .element: class="cyan fragment"-->
+						* consider CQRS<!-- .element: class="cyan fragment"-->
 						---
 						why to use JPA at all?<!-- .element: class="r-fit-text cyan"-->
-						---
-						### there are alternatives
+
+						### there are alternatives<!-- .element: class="fragment" data-fragment-index="1"-->
 
 						<!-- .slide: class="hide-ticks"-->
-						* JOOQ
-						* R2DBC<!-- .element: class="pink fragment"-->
-						* JDBI<!-- .element: class="cyan fragment"-->
+						* JOOQ<!-- .element: class="fragment" data-fragment-index="1"-->
+						* R2DBC<!-- .element: class="pink fragment" data-fragment-index="1"-->
+						* JDBI<!-- .element: class="cyan fragment" data-fragment-index="1"-->
+						* ... <!-- .element: class="fragment"-->
 						---
 						### JDBI: simple SELECTs
 
-						```java [|5|6-7]
+						```java [|4|5|6-7]
 						public class UserRepository {
 						  private final Jdbi jdbi; // <-- inject somehow
 						  public List<User> findAllUsers() {
@@ -340,7 +334,7 @@
 						---
 						### JDBI: fancy templates
 
-						``` kotlin [1-15|16-17|18-24|26]
+						``` kotlin [1-15|9|10-13|18-24|26]
 						@SqlQuery("""
 							SELECT
 								items.name AS name, item_class_name, item_class_version,
@@ -573,7 +567,7 @@
 						---
 						## spring data repository
 						```java []
-						public interface BookingRepository 
+						public interface BookingRepository
 							extends CrudRepository<BookingEntity, Long> {
 
 							Optional<BookingEntity> findBookingEntityByToken(String token);
@@ -581,6 +575,33 @@
 							@Query(
 								"from BookingEntity b left outer join fetch b.tableBookings")
 							List<BookingEntity> findBookingsWithTables();
+						}
+						```
+						---
+						## a mapper
+						```java []
+						@Mapper(uses = {TableBookingMapper.class})
+						public interface BookingMapper {
+							@Mapping(target="id.value", source="id")
+							Booking toDomain(BookingEntity bookingEntity);
+
+							@Mapping(target="id", source="id.value")
+							@Mapping(target="tableBookings", ignore = true)
+							void toEntity(Booking booking,
+								@MappingTarget BookingEntity bookingEntity);
+						}
+
+						```
+						```java []
+						public class TableBookingMapper {
+							public TableBooking toDomain(
+								TableBookingEntity tableBookingEntity) {
+								return TableBooking.builder()
+										.tableId(new TableId(
+											tableBookingEntity.getTable().getId()))
+										.seatsNumber(tableBookingEntity.getSeatsNumber())
+										.build();
+							}
 						}
 						```
 						---
@@ -607,6 +628,24 @@
 				</section>
 			</div>
 		</div>
+
+		<!-- backup
+
+		### how JPA was born
+
+		![EJB](img/ejb.png)
+		---
+		### how JPA was born
+
+		<-- .slide: class="hide-ticks" -->
+		* EJB (1998): entity beans
+		* Container-Managed persistence<-- .element: class="fragment" data-fragment-index="1" -->
+		* EJB 2 (2001): local Interfaces<-- .element: class="fragment cyan" data-fragment-index="2" -->
+		* EJB 3 (2006): give up of entity beans<-- .element: class="fragment pink" data-fragment-index="2" -->
+		---
+
+
+		-->
 
 		<script src="dist/reveal.js"></script>
 		<script src="plugin/notes/notes.js"></script>
