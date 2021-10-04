@@ -1,14 +1,15 @@
 <!doctype html>
-<html>
+<html lang="en">
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>reveal.js</title>
+		<title>To JPA or not</title>
 
 		<link rel="stylesheet" href="dist/reset.css">
 		<link rel="stylesheet" href="dist/reveal.css">
-		<link rel="stylesheet" href="dist/theme/black.css">
+		<link rel="stylesheet" href="dist/theme/night.css">
+		<link rel="stylesheet" href="css/custom.css">
 
 		<!-- Theme used for syntax highlighted code -->
 		<link rel="stylesheet" href="plugin/highlight/monokai.css">
@@ -16,10 +17,629 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+				<section data-markdown>
+					<textarea data-template>
+						<!-- .slide: data-background-image="img/first-page.png"-->
+						---
+						### software systems be like
+
+						![Koszmary architektury](img/koszmary-architektury.jpg)
+
+						<div class="source"><p>&copy; mietok - dolny.slask.org.pl (<a href="https://polska-org.pl/900451,foto.html?idEntity=3674117">link</a>)</p></div>
+						---
+						# why?!
+
+						![Layered](img/layered.png)<!-- .element: class="fragment"-->
+						---
+						```java [3|5-12|14-27|29-40|42-55|57-60|62-66|68-83|84-88|91-100|103-116|118-123|125-139]
+						@Named
+						@Transactional
+						public class Bookingmanagement {
+
+						  @Value("${client.port}")
+						  private int clientPort;
+
+						  @Value("${server.servlet.context-path}")
+						  private String serverContextPath;
+
+						  @Value("${mythaistar.hourslimitcancellation}")
+						  private int hoursLimit;
+
+						  @Inject
+						  private BookingRepository bookingDao;
+
+						  @Inject
+						  private InvitedGuestRepository invitedGuestDao;
+
+						  @Inject
+						  private TableRepository tableDao;
+
+						  @Inject
+						  private Ordermanagement orderManagement;
+
+						  @Inject
+						  private Mail mailService;
+
+						  @Override
+						  public BookingCto findBooking(Long id) {
+							LOG.debug("Get Booking with id {} from database.", id);
+							BookingEntity entity = getBookingDao().find(id);
+							BookingCto cto = new BookingCto();
+							cto.setBooking(getBeanMapper().map(entity, BookingEto.class));
+							cto.setTable(getBeanMapper().map(entity.getTable(), TableEto.class));
+							cto.setOrder(getBeanMapper().map(entity.getOrder(), OrderEto.class));
+							cto.setInvitedGuests(getBeanMapper().mapList(entity.getInvitedGuests(), InvitedGuestEto.class));
+							cto.setOrders(getBeanMapper().mapList(entity.getOrders(), OrderEto.class));
+							return cto;
+						  }
+
+						  @Override
+						  public BookingCto findBookingByToken(String token) {
+							BookingEntity entity = getBookingDao().findBookingByToken(token);
+							BookingCto cto = null;
+							if (entity != null) {
+							  cto = new BookingCto();
+							  cto.setBooking(getBeanMapper().map(entity, BookingEto.class));
+							  cto.setTable(getBeanMapper().map(entity.getTable(), TableEto.class));
+							  cto.setOrder(getBeanMapper().map(entity.getOrder(), OrderEto.class));
+							  cto.setInvitedGuests(getBeanMapper().mapList(entity.getInvitedGuests(), InvitedGuestEto.class));
+							  cto.setOrders(getBeanMapper().mapList(entity.getOrders(), OrderEto.class));
+							}
+							return cto;
+						  }
+
+						  @Override
+						  public InvitedGuestEto findInvitedGuestByToken(String token) {
+							return getBeanMapper().map(getInvitedGuestDao().findInvitedGuestByToken(token), InvitedGuestEto.class);
+						  }
+
+						  @Override
+						  @RolesAllowed(ApplicationAccessControlConfig.PERMISSION_FIND_BOOKING)
+						  public Page<BookingCto> findBookingsByPost(BookingSearchCriteriaTo criteria) {
+							return findBookingCtos(criteria);
+						  }
+
+						  @Override
+						  public Page<BookingCto> findBookingCtos(BookingSearchCriteriaTo criteria) {
+
+							Page<BookingCto> pagListTo = null;
+							Page<BookingEntity> bookings = getBookingDao().findBookings(criteria);
+							List<BookingCto> ctos = new ArrayList<>();
+							for (BookingEntity entity : bookings.getContent()) {
+							  BookingCto cto = new BookingCto();
+							  cto.setBooking(getBeanMapper().map(entity, BookingEto.class));
+							  cto.setInvitedGuests(getBeanMapper().mapList(entity.getInvitedGuests(), InvitedGuestEto.class));
+							  cto.setOrder(getBeanMapper().map(entity.getOrder(), OrderEto.class));
+							  cto.setTable(getBeanMapper().map(entity.getTable(), TableEto.class));
+							  cto.setUser(getBeanMapper().map(entity.getUser(), UserEto.class));
+							  cto.setOrders(getBeanMapper().mapList(entity.getOrders(), OrderEto.class));
+							  ctos.add(cto);
+							}
+							if (ctos.size() > 0) {
+							  Pageable pagResultTo = PageRequest.of(criteria.getPageable().getPageNumber(), ctos.size());
+							  pagListTo = new PageImpl<>(ctos, pagResultTo, bookings.getTotalElements());
+							}
+							return pagListTo;
+						  }
+
+						  @Override
+						  public boolean deleteBooking(Long bookingId) {
+							List<OrderCto> bookingOrders = this.orderManagement.findOrders(bookingId);
+							for (OrderCto orderCto : bookingOrders) {
+							  boolean deleteOrderResult = this.orderManagement.deleteOrder(orderCto.getOrder().getId());
+							}
+							BookingEntity booking = getBookingDao().find(bookingId);
+							getBookingDao().delete(booking);
+							return true;
+						  }
+
+						  @Override
+						  public BookingEto saveBooking(BookingCto booking) {
+							Objects.requireNonNull(booking, "booking");
+							BookingEntity bookingEntity = getBeanMapper().map(booking.getBooking(), BookingEntity.class);
+							bookingEntity.setCanceled(false);
+							List<InvitedGuestEntity> invited = getBeanMapper().mapList(booking.getInvitedGuests(), InvitedGuestEntity.class);
+
+							for (InvitedGuestEntity invite : invited) {
+							try {
+								invite.setGuestToken(buildToken(invite.getEmail(), "GB_"));
+							} catch (NoSuchAlgorithmException e) {
+								LOG.debug("MD5 Algorithm not available at the enviroment");
+							}
+							invite.setAccepted(false);
+							}
+
+							bookingEntity.setInvitedGuests(invited);
+							try {
+								bookingEntity.setBookingToken(buildToken(bookingEntity.getEmail(), "CB_"));
+							} catch (NoSuchAlgorithmException e) {
+								LOG.debug("MD5 Algorithm not available at the enviroment");
+							}
+
+							bookingEntity.setCreationDate(Instant.now());
+							bookingEntity.setExpirationDate(bookingEntity.getBookingDate().minus(Duration.ofHours(1)));
+
+							bookingEntity.setInvitedGuests(getBeanMapper().mapList(invited, InvitedGuestEntity.class));
+
+							BookingEntity resultEntity = getBookingDao().save(bookingEntity);
+							LOG.debug("Booking with id '{}' has been created.", resultEntity.getId());
+							for (InvitedGuestEntity invitedGuest : resultEntity.getInvitedGuests()) {
+								invitedGuest.setBookingId(resultEntity.getId());
+								InvitedGuestEntity resultInvitedGuest = getInvitedGuestDao().save(invitedGuest);
+							}
+
+							sendConfirmationEmails(resultEntity);
+
+							return getBeanMapper().map(resultEntity, BookingEto.class);
+						}
+
+						```
+						---
+						### why layers are challenging?
+
+						* simple but does not scale well<!-- .element: class="fragment" -->
+						* easy to hack by pushing things up<!-- .element: class="fragment cyan" -->
+						* use cases are obscured by trivial pass thru code<!-- .element: class="fragment pink" -->
+						* use cases are obscured by mapping<!-- .element: class="fragment" -->
+						* infrastructure layer (DB) leaks to the logic<!-- .element: class="fragment cyan" -->
+						---
+						#### data access
+
+						![ORM](img/orm-basics.png)
+
+						* constraints on domain classes<!-- .element: class="fragment"-->
+						* technology leaks via annotations<!-- .element: class="fragment"-->
+						---
+						### even more problematic
+
+						lazy loading
+
+						```java [1|2-3]
+						Order order = entityManager.find(Order.class, 17);
+						order.getOrderLines().map(line ->
+							item.getPrices().stream().summing(Price::getValue)); // N+1!
+						```
+
+						implicit updates
+
+						```java [1|2]
+						order = entityManager.find(Order.class, 17);
+						doSomeMagic(order); // one can update and you never know
+						```
+						---
+						#### architecture
+						# can we do it
+
+						better?<!-- .element class="r-fit-text"-->
+						---
+						## hexagonal
+
+						![Hexagonal](img/hexagonal.png)
+						---
+						## hexagonal
+						### dependencies
+
+						![Hexagonal deps](img/hexagonal-deps.png)
+						---
+						### data access adapter
+
+						how to implement it?<!-- .element: class="pink"-->
+
+						![Data port and adapter](img/data-port.png)<!-- .element: class="fragment" data-fragment-index="1"-->
+
+						*inversion of control<!-- .element: class="fragment cyan" data-fragment-index="1"-->
+						---
+						### remap models
+
+						![mapping](img/full-mapping.png)
+
+						<!-- .slide: class="hide-ticks"-->
+						* extra mapping & more work
+						* BUT: clean & rich domain
+						* BUT: no limits
+						* BUT: do DDD
+						---
+						### how to map?
+
+						<!-- .slide: class="hide-ticks"-->
+						* manually
+						* use Mapstruct, but...<!-- .element: class="fragment"-->
+						* don't overdose<!-- .element: class="fragment cyan"-->
+						* know when to stop<!-- .element: class="fragment cyan"-->
+						---
+						### straight use
+
+						<!-- .slide: class="hide-ticks"-->
+
+						![No mapping](img/no-mapping.png)
+
+						* simplicity
+						* no mappers
+						* BUT: tight coupling with tech<!-- .element: class="fragment pink"-->
+						* BUT: how about proxies?<!-- .element: class="fragment cyan"-->
+						---
+						## can we solve it?
+
+						![Vic](img/victorrentea.png)
+
+						<!-- .slide: class="hide-ticks"-->
+						* do not use lazy associations
+						* define aggregate boundaries<!-- .element: class="pink"-->
+						* use constructor expressions<!-- .element: class="cyan fragment"-->
+						* consider CQRS<!-- .element: class="cyan fragment"-->
+						---
+						why to use JPA at all?<!-- .element: class="r-fit-text cyan"-->
+
+						### there are alternatives<!-- .element: class="fragment" data-fragment-index="1"-->
+
+						<!-- .slide: class="hide-ticks"-->
+						* JOOQ<!-- .element: class="fragment" data-fragment-index="1"-->
+						* R2DBC<!-- .element: class="pink fragment" data-fragment-index="1"-->
+						* JDBI<!-- .element: class="cyan fragment" data-fragment-index="1"-->
+						* ... <!-- .element: class="fragment"-->
+						---
+						### JDBI: simple SELECTs
+
+						```java [|4|5|6-7]
+						public class UserRepository {
+						  private final Jdbi jdbi; // <-- inject somehow
+						  public List<User> findAllUsers() {
+						    return jdbi.withHandle(handle ->
+						      handle.createQuery("SELECT id, name FROM users ORDER BY name")
+							    .mapToBean(User.class)
+								.list();
+							}
+						  }
+						```
+						---
+						### JDBI: UPDATEs, INSERTs
+
+						```java []
+						int count = handle.createUpdate(
+							"INSERT INTO users(id, name) VALUES (:id, :name)")
+								.bind("id", 5)
+								.bind("name", "foo")
+								.execute();
+						```
+
+						```java []
+						int count = handle.createUpdate(
+							"INSERT INTO users(id, name) VALUES (:id, :name)")
+								.bindBean(new User(5, "foo")
+								.execute();
+						```
+						---
+						### JDBI: SQL Objects
+
+						```java [1-11|13-18]
+						interface ManufacturerDao {
+							@SqlQuery("SELECT id, name FROM Manufacturers ORDER BY name")
+							List<ManufacturerRec> selectAll()
+
+							@SqlQuery("SELECT id, name FROM Manufacturers WHERE id=?")
+							Optional<ManufacturerRec> selectById(long id)
+
+							@SqlUpdate("INSERT INTO Manufacturers (name) VALUES (:name)")
+							@GetGeneratedKeys("id")
+							long insert(@BindBean ManufacturerRec manufacturer)
+						}
+
+						@AllArgsConstructor
+						@Getter
+						class ManufacturerRec {
+							private Long id,
+							private String name
+						}
+						```
+						---
+						### JDBI: fancy templates
+
+						``` kotlin [1-15|9|10-13|18-24|26]
+						@SqlQuery("""
+							SELECT
+								items.name AS name, item_class_name, item_class_version,
+								manufacturer_id, manufacturers.name AS manufacturer_name,
+								manufacturers_code AS code
+							FROM Items
+							LEFT OUTER JOIN Manufacturers ON items.manufacturer_id = manufacturers.id
+							WHERE
+							1=1
+							<if(name)>AND items.name LIKE :name<endif>
+							<if(code)>AND manufacturers_code LIKE :code<endif>
+							<if(ids)>AND manufacturer_id IN (<ids>)<endif>
+							<if(itemClassIds)>AND item_class_name IN (<itemClassIds>)<endif>
+							ORDER BY name"""
+						)
+						@DefineNamedBindings
+						@UseStringTemplateEngine
+						fun selectItemsByCriteria(
+							@BindBean criteria: ItemSearchCriteria,
+							@BindList("manufacturerIds", onEmpty = BindList.EmptyHandling.NULL_VALUE)
+							ids: List<Long>?,
+							@BindList("itemClassIds", onEmpty = BindList.EmptyHandling.NULL_VALUE)
+							itemClassIds: List<String>?
+						): List<ItemWithManufacturerRec>
+
+						data class ItemSearchCriteria(val name: String?, val code: String?)
+						```
+						---
+						hexagonal<!-- .element: class="r-fit-text cyan"-->
+
+						example<!-- .element: class="r-fit-text pink"-->
+						---
+						## a domain entity
+						```java [|1-3|5-16|18-20|22-35|37-39|41-43|57-64|66-72]
+						@AllArgsConstructor(access = AccessLevel.PRIVATE)
+						@Getter
+						@Builder
+						public class Booking {
+							private final BookingId id;
+							private final Instant creationDate;
+							private final Instant bookingFromTime;
+							private final Instant bookingToTime;
+							private final Instant bookingDate;
+							private final Instant expirationDate;
+							private final String email;
+							private int seatsNumber;
+							private BookingStatus status;
+							private final String token;
+							@NonNull
+							private final Set<TableBooking> tableBookings;
+
+							public static Booking createNewBooking(@NonNull Instant bookingFromTime, @NonNull Instant bookingToTime, @NonNull String email, int seatsNumber) {
+								return createNewBooking(null, bookingFromTime, bookingToTime, email, seatsNumber);
+							}
+
+							public static Booking createNewBooking(BookingId id, @NonNull Instant bookingFromTime, @NonNull Instant bookingToTime, @NonNull String email, int seatsNumber) {
+								final Instant now = Instant.now();
+								final Duration expiry = Duration.ofDays(1);
+								final Instant bookingDate = bookingFromTime.truncatedTo(ChronoUnit.DAYS);
+								if (bookingToTime.isBefore(bookingFromTime)) {
+									throw new BookingValidationException(String.format("The booking time is invalid, end time %2$s precedes start time %1$s.", bookingFromTime, bookingToTime));
+								}
+								if (bookingFromTime.isBefore(now.plus(expiry))) {
+									throw new BookingValidationException(String.format("The booking date %s is too late to do the booking for given time.", bookingDate));
+								}
+
+								return createNewBooking(id, now, bookingFromTime, bookingToTime, bookingDate, bookingDate.minus(expiry), email, seatsNumber, BookingStatus.NEW,
+										buildToken(email, "CB_"));
+							}
+
+							public boolean isPersisted() {
+								return id != null;
+							}
+
+							public boolean containsTable(@NonNull TableId tableId) {
+								return findTable(tableId).isPresent();
+							}
+
+							public Optional<TableBooking> findTable(@NonNull TableId tableId) {
+								return tableBookings.stream().filter(tableBooking -> tableId.equals(tableBooking.getTableId())).findFirst();
+							}
+
+							public Stream<TableId> bookingsAsTableIdStream() {
+								return tableBookings.stream().map(TableBooking::getTableId);
+							}
+
+							public boolean hasSufficientTables() {
+								return tableBookings.stream().mapToInt(TableBooking::getSeatsNumber).sum() >= seatsNumber;
+							}
+
+							public void cancel() {
+								if (status == BookingStatus.NEW || status == BookingStatus.CONFIRMED) {
+									status = BookingStatus.CANCELLED;
+									tableBookings.clear();
+								} else {
+									throw new IllegalBookingStateException(id, status, BookingStatus.CANCELLED);
+								}
+							}
+
+							public void confirm() {
+								if (status == BookingStatus.NEW) {
+									status = BookingStatus.CONFIRMED;
+								} else {
+									throw new IllegalBookingStateException(id, status, BookingStatus.CONFIRMED);
+								}
+							}
+
+							public void addTableBooking(@NonNull Table table) {
+								addTableBooking(table.getId(), table.getMaxSeats());
+							}
+
+							private void addTableBooking(@NonNull TableId tableId, int seatsNumber) {
+								if (!isPersisted()) {
+									throw new BookingValidationException("The booking must be persisted to add tables to it.");
+								}
+								if (containsTable(tableId)) {
+									throw new BookingValidationException(String.format("The booking %d contains table %d already.", id.getValue(), tableId.getValue()));
+								}
+								tableBookings.add(TableBooking.createTableBooking(tableId, seatsNumber));
+							}
+						}
+						```
+						---
+						## an use case
+						```java [|4-5|8|9-13|15-18|20|21]
+						@AllArgsConstructor
+						public class ConfirmBookingUseCase implements ConfirmBookingPort {
+
+							private final FindBookingByTokenPort findBookingByTokenPort;
+							private final SaveBookingPort saveBookingPort;
+
+							@Override
+							public void confirm(ConfirmBookingCommand command) {
+								final Booking booking = findBookingByTokenPort
+									.find(command.getToken())
+									.orElseThrow(
+										() -> new BookingNotFoundException(
+											command.getToken()));
+
+								if (!booking.hasSufficientTables()) {
+									throw new IncompleteBookingException(
+										booking.getId(), "lack of table booking");
+								}
+
+								booking.confirm();
+								saveBookingPort.save(booking);
+							}
+						}
+						```
+						---
+						## ports
+						```java
+						public interface FindBookingByTokenPort {
+							Optional<Booking> find(String token);
+						}
+						```
+						```java
+						public interface SaveBookingPort {
+							void save(Booking booking);
+						}
+						```
+						---
+						## JDBI adapter
+						```java [|4-8|11|12|13-15|17-18|19-20|22-25]
+						@AllArgsConstructor
+						public class FindBookingByTokenJdbiAdapter implements FindBookingByTokenPort {
+
+							private final Jdbi db;
+							private final BookingMapper bookingMapper
+								= BookingMapper.INSTANCE;
+							private final TableBookingMapper tableBookingMapper
+								= TableBookingMapper.INSTANCE;
+
+							@Override
+							public Optional<Booking> find(@NonNull String token) {
+								return db.withHandle(handle -> {
+									final BookingDao dao = handle.attach(BookingDao.class);
+									final TableBookingDao tableBookingDao
+										= handle.attach(TableBookingDao.class);
+
+									return dao.findBookingByToken(token)
+										.map(bookingRecord -> {
+											List<TableBookingRecord> tableBookings
+											= tableBookingDao.findAllTableBookingsForBooking(bookingRecord.getId());
+
+										return bookingMapper.toDomain(bookingRecord,
+											tableBookings.stream()
+											.map(tableBookingMapper::toDomain)
+											.collect(Collectors.toSet()));
+									});
+								});
+							}
+						}
+						```
+						---
+						## a SQL object
+						```java []
+						public interface BookingDao {
+
+							@SqlQuery("SELECT * FROM Booking WHERE token=:token")
+							@RegisterBeanMapper(BookingRecord.class)
+							Optional<BookingRecord> findBookingByToken(
+								@Bind("token") String token);
+
+							@SqlQuery("SELECT * FROM Booking WHERE id=:id")
+							@RegisterBeanMapper(BookingRecord.class)
+							Optional<BookingRecord> findBookingById(
+								@Bind("id") long id);
+						}
+						```
+						---
+						## same in JPA
+						```java [|5|10-13]
+						@AllArgsConstructor
+						public class FindBookingByTokenJpaAdapter
+							implements FindBookingByTokenPort {
+
+							private final BookingRepository bookingRepository;
+
+							private final BookingMapper mapper = BookingMapper.INSTANCE;
+
+							@Override
+							public Optional<Booking> find(String token) {
+								return bookingRepository.findBookingEntityByToken(token)
+									.map(mapper::toDomain);
+							}
+						}
+
+						```
+						---
+						## spring data repository
+						```java []
+						public interface BookingRepository
+							extends CrudRepository<BookingEntity, Long> {
+
+							Optional<BookingEntity> findBookingEntityByToken(String token);
+
+							@Query(
+								"from BookingEntity b left outer join fetch b.tableBookings")
+							List<BookingEntity> findBookingsWithTables();
+						}
+						```
+						---
+						## a mapper
+						```java []
+						@Mapper(uses = {TableBookingMapper.class})
+						public interface BookingMapper {
+							@Mapping(target="id.value", source="id")
+							Booking toDomain(BookingEntity bookingEntity);
+
+							@Mapping(target="id", source="id.value")
+							@Mapping(target="tableBookings", ignore = true)
+							void toEntity(Booking booking,
+								@MappingTarget BookingEntity bookingEntity);
+						}
+
+						```
+						```java []
+						public class TableBookingMapper {
+							public TableBooking toDomain(
+								TableBookingEntity tableBookingEntity) {
+								return TableBooking.builder()
+										.tableId(new TableId(
+											tableBookingEntity.getTable().getId()))
+										.seatsNumber(tableBookingEntity.getSeatsNumber())
+										.build();
+							}
+						}
+						```
+						---
+						## Summary
+
+						* JPA can be tamed (if you know when it fails).<!-- .element: class="fragment"-->
+						* Mapping solves most of JPA-related problems.<!-- .element: class="fragment"-->
+						* If your app mostly reads or mostly writes, use simple mapper (JDBI).<!-- .element: class="fragment"-->
+						* For CRUD-like apps use JPA and shared model.<!-- .element: class="fragment"-->
+						* BUT beware: most apps in fact are not CRUDs.<!-- .element: class="fragment pink"-->
+						---
+						## thank you & questions
+
+						![QR](img/qr.png)
+
+						https://maciejmalecki.github.io/to-jpa-or-not/
+					</textarea>
+				</section>
 			</div>
 		</div>
+
+		<!-- backup
+
+		### how JPA was born
+
+		![EJB](img/ejb.png)
+		---
+		### how JPA was born
+
+		<-- .slide: class="hide-ticks" -->
+		* EJB (1998): entity beans
+		* Container-Managed persistence<-- .element: class="fragment" data-fragment-index="1" -->
+		* EJB 2 (2001): local Interfaces<-- .element: class="fragment cyan" data-fragment-index="2" -->
+		* EJB 3 (2006): give up of entity beans<-- .element: class="fragment pink" data-fragment-index="2" -->
+		---
+
+
+		-->
 
 		<script src="dist/reveal.js"></script>
 		<script src="plugin/notes/notes.js"></script>
@@ -31,6 +651,8 @@
 			// - https://revealjs.com/config/
 			Reveal.initialize({
 				hash: true,
+				slideNumber: "c/t",
+				width: 1050,
 
 				// Learn about plugins: https://revealjs.com/plugins/
 				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
