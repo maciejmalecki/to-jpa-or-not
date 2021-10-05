@@ -616,7 +616,7 @@
 									findBookingByTokenPort.find(command.getToken())
 									.orElseThrow(() -> new BookingNotFoundException(
 										command.getToken()));
-								\\ ...
+								// ...
 								booking.cancel();
 								saveBookingPort.save(booking);
 							});
