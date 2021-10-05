@@ -260,8 +260,6 @@
 						---
 						## can we solve it?
 
-						![Vic](img/victorrentea.png)
-
 						<!-- .slide: class="hide-ticks"-->
 						* do not use lazy associations
 						* define aggregate boundaries<!-- .element: class="pink"-->
@@ -311,7 +309,7 @@
 						---
 						### JDBI: SQL Objects
 
-						```java [1-11|13-18]
+						```java []
 						interface ManufacturerDao {
 							@SqlQuery("SELECT id, name FROM Manufacturers ORDER BY name")
 							List<ManufacturerRec> selectAll()
@@ -322,13 +320,6 @@
 							@SqlUpdate("INSERT INTO Manufacturers (name) VALUES (:name)")
 							@GetGeneratedKeys("id")
 							long insert(@BindBean ManufacturerRec manufacturer)
-						}
-
-						@AllArgsConstructor
-						@Getter
-						class ManufacturerRec {
-							private Long id,
-							private String name
 						}
 						```
 						---
@@ -605,12 +596,66 @@
 						}
 						```
 						---
-						## Summary
+						### how about transactions?
+						```java []
+						public interface TransactionPort {
+							<T> T inTransaction(TransactionalMapper<T> handler);
+							default void withTransaction(TransactionalConsumer consumer) {
+								inTransaction(() -> {
+									consumer.consume();
+									return null;
+								});
+							}
+						}
+						```
+						```java [|2|3-9]
+						public void cancel(CancelBookingCommand command) {
+							transactionPort.withTransaction(() -> {
+								final Booking booking =
+									findBookingByTokenPort.find(command.getToken())
+									.orElseThrow(() -> new BookingNotFoundException(
+										command.getToken()));
+								\\ ...
+								booking.cancel();
+								saveBookingPort.save(booking);
+							});
+						}
+						```
+						---
+						JDBI
 
-						* JPA can be tamed (if you know when it fails).<!-- .element: class="fragment"-->
-						* Mapping solves most of JPA-related problems.<!-- .element: class="fragment"-->
-						* If your app mostly reads or mostly writes, use simple mapper (JDBI).<!-- .element: class="fragment"-->
-						* For CRUD-like apps use JPA and shared model.<!-- .element: class="fragment"-->
+						```java []
+						@AllArgsConstructor
+						public class TransactionJdbiAdapter implements TransactionPort {
+							private final Jdbi db;
+							@Override
+							public <T> T inTransaction(TransactionalMapper<T> handler) {
+								return db.inTransaction(handle -> handler.accept());
+							}
+						}
+						```
+
+						JTA/Spring
+						```java []
+						@Service
+						public class TransactionJtaAdapter implements TransactionPort {
+							@Transactional
+							public <T> T inTransaction(TransactionalMapper<T> handler) {
+								return handler.accept();
+							}
+							@Transactional
+							public void withTransaction(TransactionalConsumer consumer) {
+								TransactionPort.super.withTransaction(consumer);
+							}
+						}
+						```
+						---
+						## summary
+
+						* JPA can be tamed (if you know when it fails).
+						* Mapping solves most of JPA-related problems.
+						* If your app mostly reads or mostly writes, use simple mapper (JDBI).
+						* For CRUD-like apps use JPA and shared model.
 						* BUT beware: most apps in fact are not CRUDs.<!-- .element: class="fragment pink"-->
 						---
 						## thank you & questions
