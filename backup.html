@@ -37,8 +37,97 @@
                         ![modules](img/modules.png)
                         ---
                         ### controller adapter
+                        ```java [|5|7-12|14-16]
+                        @RequiredArgsConstructor
+                        @Path("booking")
+                        public class CancelBookingController {
+
+                            final CancelBookingPort cancelBookingPort;
+
+                            @POST
+                            @Path("/booking/cancel/{token}")
+                            public void cancelBooking(@PathParam("token") String token) {
+                                final CancelBookingCommand cancelBookingCommand = mapInputToCommand(token);
+                                cancelBookingPort.cancel(cancelBookingCommand);
+                            }
+
+                            private CancelBookingCommand mapInputToCommand(String token) {
+                                return new CancelBookingCommand(token);
+                            }
+                        }
+                        ```
                         ---
                         ### application orchestration
+
+                        ```java [|5-9|13-22]
+                        @AllArgsConstructor
+                        @Configuration
+                        public class BookingAdapterInConfiguration {
+
+                            private final FindBookingByTokenPort findBookingByTokenPort;
+
+                            private final SaveBookingPort saveBookingPort;
+
+                            private final TransactionPort transactionPort;
+
+                            // ...
+
+                            @Bean
+                            public CancelBookingPort cancelBookingUseCase() {
+                                return new CancelBookingUseCase(findBookingByTokenPort, saveBookingPort, transactionPort);
+                            }
+
+                            @Bean
+                            public ConfirmBookingPort confirmBookingUseCase() {
+                                return new ConfirmBookingUseCase(findBookingByTokenPort, saveBookingPort);
+                            }
+                            // ...
+                        ```
+                        ---
+                        ### application orchestration
+
+                        ```java [|5-14|16-22]
+                        @AllArgsConstructor
+                        @Configuration
+                        @ConditionalOnProperty(name="booking.store", havingValue = "jdbi")
+                        public class BookingAdapterOutJdbiConfiguration {
+                            private final Jdbi jdbi;
+                            @Bean
+                            public TransactionPort transactionPort() {
+                                return new TransactionJdbiAdapter(jdbi);
+                            }
+
+                            @Bean
+                            public FindBookingByTokenPort findBookingByTokenPort() {
+                                return new FindBookingByTokenJdbiAdapter(jdbi);
+                            }
+
+                            @Bean
+                            public FindFreeTablesPort findFreeTablesPort() {
+                                return new FindFreeTablesJdbiAdapter(jdbi);
+                            }
+
+                            // ...
+                        }
+                        ```
+                        ---
+                        ### application orchestration
+                        ```java []
+                        @AllArgsConstructor
+                        @Configuration
+                        @ConditionalOnProperty(name = "booking.store", havingValue = "jdbi")
+                        public class JdbiConfiguration {
+                            private final DataSource dataSource;
+                            @Bean
+                            public Jdbi jdbi() {
+                                final Jdbi jdbi = Jdbi.create(dataSource)
+                                        .installPlugin(new SqlObjectPlugin());
+                                jdbi.configure(Enums.class,
+                                        enums -> enums.setEnumStrategy(EnumStrategy.BY_ORDINAL));
+                                return jdbi;
+                            }
+                        }
+                        ```
 					</textarea>
 				</section>
 			</div>
