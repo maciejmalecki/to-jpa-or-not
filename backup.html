@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>To JPA or not (BACKUP)</title>
+
+		<link rel="stylesheet" href="dist/reset.css">
+		<link rel="stylesheet" href="dist/reveal.css">
+		<link rel="stylesheet" href="dist/theme/night.css">
+		<link rel="stylesheet" href="css/custom.css">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="plugin/highlight/monokai.css">
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section data-markdown>
+					<textarea data-template>
+                        ### package structure
+                        ```
+                        my-app.my-subdomain.domain
+                        my-app.my-subdomain.usecase
+                        my-app.my-subdomain.port.in
+                        my-app.my-subdomain.port.out
+                        my-app.my-subdomain.adapter.in.springweb
+                        my-app.my-subdomain.adapter.in.jaxrs
+                        my-app.my-subdomain.adapter.out.jpa
+                        my-app.my-subdomain.adapter.out.jdbi
+                        my-app.my-subdomain.adapter.out.mongodb
+                        ```
+                        ---
+                        ### module split
+
+                        ![modules](img/modules.png)
+                        ---
+                        ### controller adapter
+					</textarea>
+				</section>
+			</div>
+		</div>
+
+		<script src="dist/reveal.js"></script>
+		<script src="plugin/notes/notes.js"></script>
+		<script src="plugin/markdown/markdown.js"></script>
+		<script src="plugin/highlight/highlight.js"></script>
+		<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			Reveal.initialize({
+				hash: true,
+				slideNumber: "c/t",
+				width: 1050,
+
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+			});
+		</script>
+	</body>
+</html>
