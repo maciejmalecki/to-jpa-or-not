@@ -247,7 +247,7 @@
 
 						<!-- .slide: class="hide-ticks"-->
 						* manually
-						* use Mapstruct, but...<!-- .element: class="fragment"-->
+						* or use Mapstruct, but...<!-- .element: class="fragment"-->
 						* don't overdose<!-- .element: class="fragment cyan"-->
 						* know when to stop<!-- .element: class="fragment cyan"-->
 						---
@@ -367,7 +367,7 @@
 						@AllArgsConstructor(access = AccessLevel.PRIVATE)
 						@Getter
 						@Builder
-						public class Booking {
+						public final class Booking {
 							private final BookingId id;
 							private final Instant creationDate;
 							private final Instant bookingFromTime;
