@@ -326,37 +326,6 @@
 						}
 						```
 						---
-						### JDBI: fancy templates
-
-						```kotlin [1-15|9|10-13|18-24]
-						@SqlQuery("""
-							SELECT
-								items.name AS name, item_class_name, item_class_version,
-								manufacturer_id, manufacturers.name AS manufacturer_name,
-								manufacturers_code AS code
-							FROM Items
-							LEFT OUTER JOIN Manufacturers ON items.manufacturer_id = manufacturers.id
-							WHERE
-							1=1
-							<if(name)>AND items.name LIKE :name<endif>
-							<if(code)>AND manufacturers_code LIKE :code<endif>
-							<if(ids)>AND manufacturer_id IN (<ids>)<endif>
-							<if(itemClassIds)>AND item_class_name IN (<itemClassIds>)<endif>
-							ORDER BY name"""
-						)
-						@DefineNamedBindings
-						@UseStringTemplateEngine
-						fun selectItemsByCriteria(
-							@BindBean criteria: ItemSearchCriteria,
-							@BindList("manufacturerIds", onEmpty = BindList.EmptyHandling.NULL_VALUE)
-							ids: List<Long>?,
-							@BindList("itemClassIds", onEmpty = BindList.EmptyHandling.NULL_VALUE)
-							itemClassIds: List<String>?
-						): List<ItemWithManufacturerRec>
-
-						data class ItemSearchCriteria(val name: String?, val code: String?)
-						```
-						---
 						hexagonal<!-- .element: class="r-fit-text cyan"-->
 
 						example<!-- .element: class="r-fit-text pink"-->
