@@ -239,7 +239,8 @@
 
 						<!-- .slide: class="hide-ticks"-->
 						* extra mapping & more work
-						* BUT: clean & rich domain<!-- .element: class="fragment cyan" data-fragment-index="1"-->
+						* BUT: clean domain objects<!-- .element: class="fragment cyan" data-fragment-index="1"-->
+						* BUT: rich domain objects<!-- .element: class="fragment cyan" data-fragment-index="1"-->
 						* BUT: do DDD freely<!-- .element: class="fragment cyan" data-fragment-index="1"-->
 						---
 						### how to map?
@@ -258,8 +259,8 @@
 
 						* simplicity
 						* no mappers
-						* BUT: tight coupling with tech<!-- .element: class="fragment pink"-->
-						* BUT: how about proxies?<!-- .element: class="fragment pink"-->
+						* BUT: tight coupling with tech<!-- .element: class="fragment pink" data-fragment-index="1"-->
+						* BUT: how about proxies?<!-- .element: class="fragment pink" data-fragment-index="1"-->
 						---
 						## can we solve it?
 
@@ -274,13 +275,13 @@
 						### there are alternatives<!-- .element: class="fragment" data-fragment-index="1"-->
 
 						<!-- .slide: class="hide-ticks"-->
-						* JOOQ<!-- .element: class="fragment" data-fragment-index="1"-->
+						* jOOQ<!-- .element: class="fragment" data-fragment-index="1"-->
 						* R2DBC<!-- .element: class="pink fragment" data-fragment-index="1"-->
 						* JDBI<!-- .element: class="cyan fragment" data-fragment-index="1"-->
 						---
 						### JDBI: simple SELECTs
 
-						```java [|4|5|6-7]
+						```java [|2|4|5|6-7]
 						public class UserRepository {
 						  private final Jdbi jdbi; // <-- inject somehow
 						  public List<User> findAllUsers() {
