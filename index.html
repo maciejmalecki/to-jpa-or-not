@@ -240,8 +240,7 @@
 						<!-- .slide: class="hide-ticks"-->
 						* extra mapping & more work
 						* BUT: clean & rich domain<!-- .element: class="fragment cyan" data-fragment-index="1"-->
-						* BUT: no limits<!-- .element: class="fragment cyan" data-fragment-index="1"-->
-						* BUT: do DDD<!-- .element: class="fragment cyan" data-fragment-index="1"-->
+						* BUT: do DDD freely<!-- .element: class="fragment cyan" data-fragment-index="1"-->
 						---
 						### how to map?
 
@@ -249,7 +248,7 @@
 						* manually
 						* or use Mapstruct, but...<!-- .element: class="fragment"-->
 						* don't overdose<!-- .element: class="fragment cyan"-->
-						* know when to stop<!-- .element: class="fragment cyan"-->
+						* and know when to stop<!-- .element: class="fragment cyan"-->
 						---
 						### shared model
 
@@ -260,7 +259,7 @@
 						* simplicity
 						* no mappers
 						* BUT: tight coupling with tech<!-- .element: class="fragment pink"-->
-						* BUT: how about proxies?<!-- .element: class="fragment cyan"-->
+						* BUT: how about proxies?<!-- .element: class="fragment pink"-->
 						---
 						## can we solve it?
 
@@ -422,7 +421,7 @@
 						}
 						```
 						---
-						## an use case
+						## a use case
 						```java [|4-5|8|9-13|15-18|20|21]
 						@AllArgsConstructor
 						public class ConfirmBookingUseCase implements ConfirmBookingPort {
@@ -494,7 +493,7 @@
 						}
 						```
 						---
-						## a SQL object
+						## an SQL object
 						```java []
 						public interface BookingDao {
 
